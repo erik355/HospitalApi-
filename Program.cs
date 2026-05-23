@@ -1,13 +1,21 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<HospitalContext>(options =>
     options.UseSqlite("Data Source=hospital.db"));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<PacienteRepository>();
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer();
+builder.Services.AddAuthorization();
 var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
+app.UseAuthentication();
+app.UseAuthorization();
 
 // muestra todo los pacientes 
 app.MapGet("/pacientes", (PacienteRepository repo) =>
@@ -70,7 +78,7 @@ app.MapDelete("/paciente/buscar/{nombre}",(string nombre, PacienteRepository rep
         return Results.NotFound (new{MENSAJE = "Paciente no encontrado"});
 
     }
-});
+}).RequireAuthorization();
     // modificar paciente
 app.MapPut("/paciente/buscar/{nombre}",(string nombre , Paciente datosNuevos, PacienteRepository repo)=>
 {
@@ -85,7 +93,7 @@ app.MapPut("/paciente/buscar/{nombre}",(string nombre , Paciente datosNuevos, Pa
         return Results.NotFound (new{mensaje = "paciente no encontrado"});
 
     }
- });
+ }).RequireAuthorization();
 
 //agrega paciente
 app.MapPost("/pacientes", (Paciente nuevoPaciente, PacienteRepository repo) =>
@@ -93,5 +101,26 @@ app.MapPost("/pacientes", (Paciente nuevoPaciente, PacienteRepository repo) =>
     repo.Agregar(nuevoPaciente);
    
     return Results.Ok(nuevoPaciente);
+}).RequireAuthorization();
+//Usuario y contraseña
+app.MapPost("/login", (Usuario usuario) =>
+{
+    if (usuario.NombreUsuario == "admin" && usuario.Contrasena == "1234")
+    {
+        var clave = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("esta-es-mi-clave-secreta-super-larga-123456"));
+        var credenciales = new SigningCredentials(clave, SecurityAlgorithms.HmacSha256);
+        var token = new JwtSecurityToken(
+            issuer: "HospitalApi",
+            audience: "HospitalApi",
+            expires: DateTime.Now.AddHours(1),
+            signingCredentials: credenciales
+        );
+        var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+        return Results.Ok(new { token = tokenString });
+    }
+    else
+    {
+        return Results.Unauthorized();
+    }
 });
 app.Run ();
