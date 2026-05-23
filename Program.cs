@@ -4,14 +4,15 @@ builder.Services.AddDbContext<HospitalContext>(options =>
     options.UseSqlite("Data Source=hospital.db"));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<PacienteRepository>();
 var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
 // muestra todo los pacientes 
-app.MapGet("/pacientes", (HospitalContext db) =>
+app.MapGet("/pacientes", (PacienteRepository repo) =>
 {
-    return db.Pacientes.ToList();
+    return repo.ObtenerTodos();
 });
 //muestra personas 
 //app.MapGet("/persona",()=>
@@ -47,9 +48,9 @@ app.MapGet("/PACIENTES-ORDENADOS-POR-EDAD",(HospitalContext db)=>
 
 });
 //Buscar paciente por nombre 
-app.MapGet("/paciente/buscar/{nombre}",(string nombre, HospitalContext db)=>
+app.MapGet("/paciente/buscar/{nombre}",(string nombre, PacienteRepository repo)=>
 {
-    var encontrado = db.Pacientes.FirstOrDefault(p=> p.Nombre.ToLower().Contains(nombre.ToLower()));
+    var encontrado = repo.ObtenerPorNombre(nombre);
 
     if (encontrado != null)
     {
@@ -61,13 +62,12 @@ app.MapGet("/paciente/buscar/{nombre}",(string nombre, HospitalContext db)=>
     }
 });
 //borrar paciente 
-app.MapDelete("/paciente/buscar/{nombre}",(string nombre, HospitalContext db)=>
+app.MapDelete("/paciente/buscar/{nombre}",(string nombre, PacienteRepository repo)=>
 {
-     var encontrado = db.Pacientes.FirstOrDefault(p=> p.Nombre.ToLower().Contains(nombre.ToLower()));
+     var encontrado = repo.ObtenerPorNombre(nombre);
      if (encontrado != null)
     {
-        db.Pacientes.Remove(encontrado);
-        db.SaveChanges();
+       repo.Eliminar(nombre);  
         return Results.Ok(new { mensaje = "Paciente eliminado" });
     }
     else
@@ -77,16 +77,12 @@ app.MapDelete("/paciente/buscar/{nombre}",(string nombre, HospitalContext db)=>
     }
 });
     // modificar paciente
-app.MapPut("/paciente/buscar/{nombre}",(string nombre , Paciente datosNuevos, HospitalContext db)=>
+app.MapPut("/paciente/buscar/{nombre}",(string nombre , Paciente datosNuevos, PacienteRepository repo)=>
 {
-    var encontrado = db.Pacientes.FirstOrDefault(P=> P.Nombre.ToLower().Contains(nombre.ToLower()));
+    var encontrado = repo.ObtenerPorNombre(nombre);
     if (encontrado != null)
     {
-        encontrado.Diagnostico = datosNuevos.Diagnostico;
-        encontrado.Temperatura = datosNuevos.Temperatura;
-        encontrado.Internado = datosNuevos.Internado;
-        encontrado.ObraSocial = datosNuevos.ObraSocial;
-        db.SaveChanges();
+        repo.Modificar(nombre, datosNuevos);
         return Results.Ok(new{ mensaje = "paciente modificado"});
     }
     else
@@ -96,11 +92,11 @@ app.MapPut("/paciente/buscar/{nombre}",(string nombre , Paciente datosNuevos, Ho
     }
  });
 
-//agrega pasiente
-app.MapPost("/pacientes", (Paciente nuevoPaciente, HospitalContext db) =>
+//agrega paciente
+app.MapPost("/pacientes", (Paciente nuevoPaciente, PacienteRepository repo) =>
 {
-    db.Pacientes.Add(nuevoPaciente);
-    db.SaveChanges();
+    repo.Agregar(nuevoPaciente);
+   
     return Results.Ok(nuevoPaciente);
 });
 app.Run ();
