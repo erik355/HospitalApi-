@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SQLitePCL;
 
 public class PacienteRepository
 {
@@ -13,6 +14,26 @@ public class PacienteRepository
 {
     return _db.Pacientes.ToList();
 }
+//pacientes mayoresd de 40
+public List<Paciente> ObtenerMayoresDe40()
+{
+    return _db.Pacientes.Where(p => p.Edad > 40).ToList();
+}
+//pacientes con fiabre 
+public List<Paciente> ObtenerConFiebre()
+    {
+        return _db.Pacientes.Where(p => p.Temperatura > 37.5).ToList();
+    }
+// pacientes con obra social
+public List<Paciente> ObtenerConObraSocial()
+    {
+        return _db.Pacientes.Where(p => p.ObraSocial == false).ToList();
+    }
+//Obtenet ordenados por edad
+public List<Paciente> ObtenerOrdenadoPorEdad()
+    {
+        return _db.Pacientes.OrderByDescending(p => p.Edad).ToList();
+    }
 //buscar por nombre de paciente
 public Paciente? ObtenerPorNombre (string nombre)
     {

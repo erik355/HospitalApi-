@@ -21,31 +21,26 @@ app.MapGet("/pacientes", (PacienteRepository repo) =>
 
 //});
 //pacientes con fiebre 
-app.MapGet("/PACIENTES/CON-FIEBRE",(HospitalContext db)=>
+app.MapGet("/PACIENTES/CON-FIEBRE", (PacienteRepository repo) =>
 {
-   var CONFIEBRE = db.Pacientes.Where(p=>p.Temperatura > 37.5);
-   return CONFIEBRE;
-
+    return repo.ObtenerConFiebre();
 });
 //pacientes mayores de 40 
-app.MapGet("/PACIENTES/MAYORES-DE-40",(HospitalContext db)=>
+app.MapGet("/PACIENTES/MAYORES-DE-40", (PacienteRepository repo) =>
 {
-    var MAYORESDE40 = db.Pacientes.Where(p=> p.Edad > 40);
-    return MAYORESDE40;
+    return repo.ObtenerMayoresDe40();
 });
 //pacientes sin obra social 
-app.MapGet("/PACIENTES/SIN-OBRA-SOCIAL",(HospitalContext db)=>
+app.MapGet("/PACIENTES/SIN-OBRA-SOCIAL",(PacienteRepository repo)=>
 {
-   var SINOBRASOCIAL = db.Pacientes.Where(p=>p.ObraSocial ==false);
-   return SINOBRASOCIAL;
+   return repo.ObtenerConObraSocial();
+   
 
 });
 //pacientes ordenados por edad (mayor a menor)
-app.MapGet("/PACIENTES-ORDENADOS-POR-EDAD",(HospitalContext db)=>
+app.MapGet("/PACIENTES-ORDENADOS-POR-EDAD",(PacienteRepository repo)=>
 {
-    var ORDENADOSPOREDAD = db.Pacientes.OrderByDescending(p => p.Edad);
-    return ORDENADOSPOREDAD;
-
+  return repo.ObtenerOrdenadoPorEdad();
 });
 //Buscar paciente por nombre 
 app.MapGet("/paciente/buscar/{nombre}",(string nombre, PacienteRepository repo)=>
