@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using Microsoft.AspNetCore.Mvc;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<HospitalContext>(options =>
     options.UseSqlite("Data Source=hospital.db"));
@@ -11,11 +12,14 @@ builder.Services.AddScoped<PacienteRepository>();
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer();
 builder.Services.AddAuthorization();
+builder.Services.AddControllers();
 var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapControllers();
+
 
 // muestra todo los pacientes 
 app.MapGet("/pacientes", (PacienteRepository repo) =>
